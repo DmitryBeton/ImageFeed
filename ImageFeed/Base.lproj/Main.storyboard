@@ -27,23 +27,26 @@
                                             <rect key="frame" x="0.0" y="0.0" width="402" height="200"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="0" translatesAutoresizingMaskIntoConstraints="NO" id="Z1g-Al-nQe" userLabel="cell Image">
+                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Z1g-Al-nQe" userLabel="cell Image">
                                                     <rect key="frame" x="16" y="4" width="370" height="192"/>
                                                     <color key="backgroundColor" red="0.10196078431372549" green="0.10588235294117647" blue="0.13333333333333333" alpha="1" colorSpace="custom" customColorSpace="calibratedRGB"/>
                                                     <userDefinedRuntimeAttributes>
+                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="layer.masksToBounds" value="YES"/>
                                                         <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
                                                             <integer key="value" value="16"/>
                                                         </userDefinedRuntimeAttribute>
-                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="layer.masksToBounds" value="YES"/>
                                                     </userDefinedRuntimeAttributes>
                                                 </imageView>
+                                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fFJ-H1-gSl">
+                                                    <rect key="frame" x="16" y="165" width="370" height="31"/>
+                                                </view>
                                                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="kht-zX-5YK" userLabel="Like Button">
                                                     <rect key="frame" x="342" y="4" width="44" height="44"/>
                                                     <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
-                                                    <state key="normal" image="Active"/>
+                                                    <state key="normal" image="like_button_off"/>
                                                 </button>
-                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="date" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="KnM-b2-tqq" userLabel="Date Label">
-                                                    <rect key="frame" x="24" y="172" width="27" height="16"/>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Date()" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="KnM-b2-tqq" userLabel="Date Label">
+                                                    <rect key="frame" x="23.999999999999996" y="172" width="38.666666666666657" height="16"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="13"/>
                                                     <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                     <nil key="highlightedColor"/>
@@ -51,6 +54,8 @@
                                             </subviews>
                                             <color key="backgroundColor" red="0.10196078431372549" green="0.10588235294117647" blue="0.13333333333333333" alpha="1" colorSpace="custom" customColorSpace="calibratedRGB"/>
                                             <constraints>
+                                                <constraint firstItem="fFJ-H1-gSl" firstAttribute="top" secondItem="KnM-b2-tqq" secondAttribute="top" constant="-7" id="0yq-Xz-D1y"/>
+                                                <constraint firstItem="fFJ-H1-gSl" firstAttribute="leading" secondItem="Z1g-Al-nQe" secondAttribute="leading" id="20B-R3-Mm6"/>
                                                 <constraint firstItem="kht-zX-5YK" firstAttribute="top" secondItem="Z1g-Al-nQe" secondAttribute="top" id="5ZC-2U-Vsy"/>
                                                 <constraint firstItem="Z1g-Al-nQe" firstAttribute="bottom" secondItem="KnM-b2-tqq" secondAttribute="bottom" constant="8" id="Ace-XT-FRx"/>
                                                 <constraint firstItem="Z1g-Al-nQe" firstAttribute="top" secondItem="f9r-2E-bvn" secondAttribute="topMargin" constant="-7" id="D8T-Qf-VZX"/>
@@ -58,13 +63,16 @@
                                                 <constraint firstItem="Z1g-Al-nQe" firstAttribute="leading" secondItem="KnM-b2-tqq" secondAttribute="leading" constant="-8" id="U8L-6g-VCy"/>
                                                 <constraint firstItem="Z1g-Al-nQe" firstAttribute="leading" secondItem="f9r-2E-bvn" secondAttribute="leadingMargin" constant="-4" id="fGv-aG-vuc"/>
                                                 <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="KnM-b2-tqq" secondAttribute="trailing" constant="20" symbolic="YES" id="iL1-RU-aMb"/>
+                                                <constraint firstItem="fFJ-H1-gSl" firstAttribute="trailing" secondItem="Z1g-Al-nQe" secondAttribute="trailing" id="jg7-nq-p9D"/>
                                                 <constraint firstItem="kht-zX-5YK" firstAttribute="trailing" secondItem="Z1g-Al-nQe" secondAttribute="trailing" id="jnI-mO-XMA"/>
+                                                <constraint firstItem="fFJ-H1-gSl" firstAttribute="bottom" secondItem="Z1g-Al-nQe" secondAttribute="bottom" id="tNW-Ph-Dcj"/>
                                                 <constraint firstItem="Z1g-Al-nQe" firstAttribute="centerX" secondItem="f9r-2E-bvn" secondAttribute="centerX" id="wr6-hO-39Z"/>
                                             </constraints>
                                         </tableViewCellContentView>
                                         <connections>
                                             <outlet property="cellImage" destination="Z1g-Al-nQe" id="9YK-P4-kqy"/>
                                             <outlet property="dateLabel" destination="KnM-b2-tqq" id="St9-ZV-ZMw"/>
+                                            <outlet property="gradientView" destination="fFJ-H1-gSl" id="VQD-6H-C54"/>
                                             <outlet property="likeButton" destination="kht-zX-5YK" id="eHV-u4-o0A"/>
                                         </connections>
                                     </tableViewCell>
@@ -90,11 +98,10 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="125.95419847328243" y="-2.1126760563380285"/>
+            <point key="canvasLocation" x="123.88059701492537" y="-3.432494279176201"/>
         </scene>
     </scenes>
     <resources>
-        <image name="0" width="1600" height="1059"/>
-        <image name="Active" width="44" height="44"/>
+        <image name="like_button_off" width="44" height="44"/>
     </resources>
 </document>
