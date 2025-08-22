@@ -24,6 +24,7 @@ final class SingleImageViewController: UIViewController {
         super.viewDidLoad()
         scrollView.minimumZoomScale = 0.1
         scrollView.maximumZoomScale = 1.25
+        scrollView.contentInsetAdjustmentBehavior = .never
 
         guard let image else { return }
         imageView.image = image
@@ -55,15 +56,50 @@ final class SingleImageViewController: UIViewController {
         let scale = min(maxZoomScale, max(minZoomScale, min(hScale, vScale)))
         scrollView.setZoomScale(scale, animated: false)
         scrollView.layoutIfNeeded()
-        let newContentSize = scrollView.contentSize
-        let x = (newContentSize.width - visibleRectSize.width) / 2
-        let y = (newContentSize.height - visibleRectSize.height) / 2
-        scrollView.setContentOffset(CGPoint(x: x, y: y), animated: false)
+        centerImage()
+//      может понадобится в будущем
+//        let newContentSize = scrollView.contentSize
+//        let x = (newContentSize.width - visibleRectSize.width) / 2
+//        let y = (newContentSize.height - visibleRectSize.height) / 2
+//        scrollView.setContentOffset(CGPoint(x: x, y: y), animated: false)
+    }
+    
+    // функция только для центрирования
+    private func centerImage() {
+        let boundsSize = scrollView.bounds.size
+        let contentSize = scrollView.contentSize
+        
+        var horizontalInset: CGFloat = 0
+        var verticalInset: CGFloat = 0
+        
+        if contentSize.width < boundsSize.width {
+            horizontalInset = (boundsSize.width - contentSize.width) / 2
+        }
+        
+        if contentSize.height < boundsSize.height {
+            verticalInset = (boundsSize.height - contentSize.height) / 2
+        }
+        
+        // contentInset
+        scrollView.contentInset = UIEdgeInsets(
+            top: verticalInset,
+            left: horizontalInset,
+            bottom: verticalInset,
+            right: horizontalInset
+        )
     }
 }
 
 extension SingleImageViewController: UIScrollViewDelegate {
     func viewForZooming(in scrollView: UIScrollView) -> UIView? {
         return imageView
+    }
+    
+    func scrollViewDidZoom(_ scrollView: UIScrollView) {
+        centerImage()
+    }
+    
+    func scrollViewDidEndZooming(_ scrollView: UIScrollView, with view: UIView?, atScale scale: CGFloat) {
+        centerImage()
     }
 }
