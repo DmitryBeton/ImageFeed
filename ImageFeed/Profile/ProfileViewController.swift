@@ -9,6 +9,8 @@ import UIKit
 
 final class ProfileViewController: UIViewController {
     
+    // MARK: - UI Elements
+    
     private let imageView: UIImageView = {
         let profileImage = UIImage(named: "profileIcon")
         let imageView = UIImageView(image: profileImage)
@@ -21,6 +23,7 @@ final class ProfileViewController: UIViewController {
         let label = UILabel()
         label.text = "Екатерина Новикова"
         label.font = .systemFont(ofSize: 23, weight: .bold)
+        label.textColor = .white
         return label
     }()
     
@@ -50,11 +53,15 @@ final class ProfileViewController: UIViewController {
         return button
     }()
     
+    // MARK: - Lifecycle
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         setupConstrains()
     }
+    
+    // MARK: - Setup UI
     
     func setupUI() {
         view.backgroundColor = UIColor(red: 26/255, green: 27/255, blue: 34/255, alpha: 1)
@@ -64,6 +71,8 @@ final class ProfileViewController: UIViewController {
         view.addSubview(descriptionLabel)
         view.addSubview(logoutButton)
     }
+    
+    // MARK: - Layout
     
     func setupConstrains() {
         imageView.translatesAutoresizingMaskIntoConstraints = false
@@ -89,7 +98,9 @@ final class ProfileViewController: UIViewController {
         logoutButton.centerYAnchor.constraint(equalTo: imageView.centerYAnchor).isActive = true
     }
     
+    // MARK: - Actions
+    
     @objc private func logoutButtonTapped(_ sender: UIButton) {
-
+        
     }
 }
