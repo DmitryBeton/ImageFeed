@@ -21,7 +21,7 @@ final class ImagesListCell: UITableViewCell {
         gradientLayer.frame = gradientView.bounds
         gradientLayer.colors = [
             UIColor.black.withAlphaComponent(0.0).cgColor,
-            UIColor.black.withAlphaComponent(0.5).cgColor
+            UIColor.black.withAlphaComponent(0.4).cgColor
         ]
         gradientLayer.startPoint = CGPoint(x: 0.5, y: 0)
         gradientLayer.endPoint = CGPoint(x: 0.5, y: 1)
