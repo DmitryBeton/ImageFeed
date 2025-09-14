@@ -14,7 +14,7 @@ final class SplashViewController: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        print("🔍 Checking auth status. Token: \(storage.token ?? "nil")")
+        print("🔍 Checking auth status.")
         if storage.token != nil {
             switchToTabBarController()
         } else {
@@ -25,6 +25,7 @@ final class SplashViewController: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        print("WillAppear Splash")
         setNeedsStatusBarAppearanceUpdate()
     }
 
@@ -33,23 +34,23 @@ final class SplashViewController: UIViewController {
     }
 
     private func switchToTabBarController() {
-        print("🔄 Switching to TabBarController...")
         guard let window = UIApplication.shared.windows.first else {
             assertionFailure("Invalid window configuration")
             return
         }
-        print("✅ Success! Window is created")
 
         let tabBarController = UIStoryboard(name: "Main", bundle: .main)
             .instantiateViewController(withIdentifier: "TabBarViewController")
         window.rootViewController = tabBarController
-        print("✅ Success! Setting TabBarController as root")
+        print("✅ Setting TabBarController as root")
 
     }
 }
 
 extension SplashViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        print("prepare splash")
+
         if segue.identifier == showAuthenticationScreenSegueIdentifier {
             guard
                 let navigationController = segue.destination as? UINavigationController,
@@ -67,7 +68,7 @@ extension SplashViewController {
 
 extension SplashViewController: AuthViewControllerDelegate {
     func didAuthenticate(_ vc: AuthViewController) {
-        print("✅ didAuthenticate")
+        print("didAuthenticate")
         vc.dismiss(animated: true)
         switchToTabBarController()
     }

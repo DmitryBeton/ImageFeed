@@ -38,16 +38,15 @@ final class OAuth2Service {
                     let accessToken = tokenResponse.access_token
                     OAuth2TokenStorage.shared.token = accessToken
                     print("✅ Токен успешно получен:", accessToken)
-                    completion(.success(accessToken))
+                    DispatchQueue.main.async { completion(.success(accessToken)) }
                 } catch {
                     print("❌ Ошибка при декодировании токена:", error)
                     completion(.failure(NetworkError.decodingError(error)))
                 }
                 
             case .failure(let error):
-                print("❌ Ошибка сети:", error)
+                print("Ошибка сети:", error)
                 
-                // Более детальная обработка ошибок
                 if let networkError = error as? NetworkError {
                     switch networkError {
                     case .httpStatusCode(let code):

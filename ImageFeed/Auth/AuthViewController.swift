@@ -13,12 +13,14 @@ final class AuthViewController: UIViewController {
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
+        print("DidLoad AuthView")
         super.viewDidLoad()
         configureBackButton()
     }
     
     // MARK: - Methods
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        print("prepare AuthView")
         guard
             segue.identifier == showWebViewSegueIdentifier,
             let webViewViewController = segue.destination as? WebViewViewController
@@ -36,35 +38,39 @@ final class AuthViewController: UIViewController {
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
         navigationItem.backBarButtonItem?.tintColor = UIColor(named: "ypBlack")
     }
-
+    
 }
 
 extension AuthViewController: WebViewViewControllerDelegate {
     func webViewViewController(_ vc: WebViewViewController, didAuthenticateWithCode code: String) {
         vc.dismiss(animated: true)
-        
-        fetchOAuthToken(code) { [weak self] result in
+        print("4")
+        oauth2Service.fetchOAuthToken(code) { [weak self] result in
             guard let self = self else { return }
+            print("oauth2Service.fetchOAuthToken")
             
             switch result {
             case .success:
+                print("🍀GOOD")
                 self.delegate?.didAuthenticate(self)
             case .failure:
+                print("❌BAD")
                 break
             }
         }
     }
-
+    
     func webViewViewControllerDidCancel(_ vc: WebViewViewController) {
+        print("webViewViewControllerDidCancel")
         vc.dismiss(animated: true)
     }
 }
 
-extension AuthViewController {
-    private func fetchOAuthToken(_ code: String, completion: @escaping (Result<String, Error>) -> Void) {
-        oauth2Service.fetchOAuthToken(code) { result in
-            completion(result)
-        }
-    }
-}
-
+//extension AuthViewController {
+//    private func fetchOAuthToken(_ code: String, completion: @escaping (Result<String, Error>) -> Void) {
+//        oauth2Service.fetchOAuthToken(code) { result in
+//            print("1")
+//            completion(result)
+//        }
+//    }
+//}

@@ -18,8 +18,8 @@ final class OAuth2TokenStorage {
             return UserDefaults.standard.string(forKey: "OAuth2Token") ?? nil
         }
         set {
-            UserDefaults.standard.set(newValue, forKey: "OAuth2Token")
             print("💾 Token saved to storage: \(String(describing: newValue))")
+            UserDefaults.standard.set(newValue, forKey: "OAuth2Token")
         }
     }
 }
