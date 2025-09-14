@@ -14,11 +14,11 @@ final class OAuth2TokenStorage {
     
     var token: String? {
         get {
-            print("🔍 Reading token from storage: \(UserDefaults.standard.string(forKey: "OAuth2Token") ?? "nil")")
+            print("🔍 Reading token from storage")
             return UserDefaults.standard.string(forKey: "OAuth2Token") ?? nil
         }
         set {
-            print("💾 Token saved to storage: \(String(describing: newValue))")
+            print("💾 Token saved to storage")
             UserDefaults.standard.set(newValue, forKey: "OAuth2Token")
         }
     }

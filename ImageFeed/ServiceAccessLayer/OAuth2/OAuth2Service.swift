@@ -2,7 +2,7 @@ import Foundation
 
 final class OAuth2Service {
     static let shared = OAuth2Service()
-    
+    private let decoder = JSONDecoder()
     private init() { }
     
     func fetchOAuthToken(_ code: String, completion: @escaping (Result<String, Error>) -> Void) {
@@ -28,17 +28,20 @@ final class OAuth2Service {
         request.httpBody = bodyString.data(using: .utf8)
         print("ℹ️ Тело запроса: \(bodyString)")
         
-        let task = URLSession.shared.data(for: request) { result in
+        let task = URLSession.shared.data(for: request) { [weak self] result in
             switch result {
             case .success(let data):
                 print("📩 Ответ Unsplash: \(String(data: data, encoding: .utf8) ?? "nil")")
-                
+                guard let self = self else {
+                    completion(.failure(NetworkError.invalidRequest))
+                    return
+                }
                 do {
-                    let tokenResponse = try JSONDecoder().decode(OAuthTokenResponseBody.self, from: data)
-                    let accessToken = tokenResponse.access_token
+                    let tokenResponse = try self.decoder.decode(OAuthTokenResponseBody.self, from: data)
+                    let accessToken = tokenResponse.accessToken
                     OAuth2TokenStorage.shared.token = accessToken
                     print("✅ Токен успешно получен:", accessToken)
-                    DispatchQueue.main.async { completion(.success(accessToken)) }
+                    completion(.success(accessToken))
                 } catch {
                     print("❌ Ошибка при декодировании токена:", error)
                     completion(.failure(NetworkError.decodingError(error)))
@@ -61,11 +64,9 @@ final class OAuth2Service {
                         print("❌ Ошибка декодирования:", decodingError)
                     }
                 }
-                
                 completion(.failure(error))
             }
         }
-        
         task.resume()
     }
 }
