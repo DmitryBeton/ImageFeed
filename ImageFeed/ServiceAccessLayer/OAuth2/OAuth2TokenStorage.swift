@@ -9,17 +9,24 @@ import Foundation
 
 final class OAuth2TokenStorage {
     
+    private let dataStorage =  UserDefaults.standard
+    private let tokenKey = "token"
+    
     static let shared = OAuth2TokenStorage()
     private init() {}
     
     var token: String? {
         get {
-            print("🔍 Reading token from storage")
-            return UserDefaults.standard.string(forKey: "OAuth2Token") ?? nil
+            print("🔍 Reading token from storage:")
+            return dataStorage.string(forKey: tokenKey)
         }
         set {
-            print("💾 Token saved to storage")
-            UserDefaults.standard.set(newValue, forKey: "OAuth2Token")
+            print("💾 Saving token to storage:", newValue ?? "nil")
+            if let token = newValue {
+                dataStorage.set(token, forKey: tokenKey)
+            } else {
+                dataStorage.removeObject(forKey: tokenKey)
+            }
         }
     }
 }

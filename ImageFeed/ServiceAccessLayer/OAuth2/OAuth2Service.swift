@@ -1,72 +1,114 @@
 import Foundation
 
+enum AuthServiceError: Error {
+    case invalidRequest
+}
+
 final class OAuth2Service {
     static let shared = OAuth2Service()
-    private let decoder = JSONDecoder()
+    
+    private let dataStorage = OAuth2TokenStorage.shared
+    private let urlSession = URLSession.shared
+    
+    private var task: URLSessionTask?
+    
+    private var lastCode: String?
+    
+    private(set) var authToken: String? {
+        get {
+            return dataStorage.token
+        }
+        set {
+            dataStorage.token = newValue
+        }
+    }
+    
     private init() { }
     
     func fetchOAuthToken(_ code: String, completion: @escaping (Result<String, Error>) -> Void) {
-        guard let url = URL(string: "https://unsplash.com/oauth/token") else {
-            print("❌ Ошибка: неверный URL для запроса токена")
-            completion(.failure(NetworkError.invalidRequest))
+        print("🟡 Starting OAuth with code:", code)
+        assert(Thread.isMainThread)
+        guard lastCode != code else {
+            completion(.failure(AuthServiceError.invalidRequest))
             return
         }
-        print("➡️ Формируем POST-запрос для получения токена")
         
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        task?.cancel()
+        lastCode = code
+        guard
+            let request = makeOAuthTokenRequest(code: code)
+        else {
+            completion(.failure(AuthServiceError.invalidRequest))
+            return
+        }
         
-        let bodyComponents = [
-            "client_id=\(Constants.accessKey)",
-            "client_secret=\(Constants.secretKey)",
-            "redirect_uri=\(Constants.redirectURI)",
-            "code=\(code)",
-            "grant_type=authorization_code"
+        let task = object(for: request) { [weak self] result in
+            DispatchQueue.main.async {
+                self?.task = nil
+                self?.lastCode = nil
+                
+                switch result {
+                case .success(let body):
+                    let authToken = body.accessToken
+                    print("🟢 OAuth success! Token:", authToken)
+                    self?.authToken = authToken
+                    completion(.success(authToken))
+                case .failure(let error):
+                    print("🔴 OAuth error:", error)
+                    completion(.failure(error))
+                }
+            }
+        }
+        
+        self.task = task
+        task.resume()
+    }
+    
+    private func makeOAuthTokenRequest(code: String) -> URLRequest? {
+        guard
+            var urlComponents = URLComponents(string: "https://unsplash.com/oauth/token")
+        else {
+            assertionFailure("Failed to create URL")
+            return nil
+        }
+        
+        urlComponents.queryItems = [
+            URLQueryItem(name: "client_id", value: Constants.accessKey),
+            URLQueryItem(name: "client_secret", value: Constants.secretKey),
+            URLQueryItem(name: "redirect_uri", value: Constants.redirectURI),
+            URLQueryItem(name: "code", value: code),
+            URLQueryItem(name: "grant_type", value: "authorization_code"),
         ]
-        let bodyString = bodyComponents.joined(separator: "&")
-        request.httpBody = bodyString.data(using: .utf8)
-        print("ℹ️ Тело запроса: \(bodyString)")
         
-        let task = URLSession.shared.data(for: request) { [weak self] result in
+        guard let authTokenUrl = urlComponents.url else {
+            return nil
+        }
+        
+        var request = URLRequest(url: authTokenUrl)
+        request.httpMethod = "POST"
+        return request
+    }
+}
+
+// MARK: - Network Client
+
+extension OAuth2Service {
+    private func object(for request: URLRequest, completion: @escaping (Result<OAuthTokenResponseBody, Error>) -> Void) -> URLSessionTask {
+        let decoder = JSONDecoder()
+        return urlSession.data(for: request) { (result: Result<Data, Error>) in
             switch result {
             case .success(let data):
-                print("📩 Ответ Unsplash: \(String(data: data, encoding: .utf8) ?? "nil")")
-                guard let self = self else {
-                    completion(.failure(NetworkError.invalidRequest))
-                    return
-                }
                 do {
-                    let tokenResponse = try self.decoder.decode(OAuthTokenResponseBody.self, from: data)
-                    let accessToken = tokenResponse.accessToken
-                    OAuth2TokenStorage.shared.token = accessToken
-                    print("✅ Токен успешно получен:", accessToken)
-                    completion(.success(accessToken))
-                } catch {
-                    print("❌ Ошибка при декодировании токена:", error)
+                    let body = try decoder.decode(OAuthTokenResponseBody.self, from: data)
+                    completion(.success(body))
+                }
+                catch {
                     completion(.failure(NetworkError.decodingError(error)))
                 }
                 
             case .failure(let error):
-                print("Ошибка сети:", error)
-                
-                if let networkError = error as? NetworkError {
-                    switch networkError {
-                    case .httpStatusCode(let code):
-                        print("❌ HTTP ошибка: статус код", code)
-                    case .urlRequestError(let underlyingError):
-                        print("❌ Ошибка запроса:", underlyingError)
-                    case .urlSessionError:
-                        print("❌ Неизвестная ошибка сессии")
-                    case .invalidRequest:
-                        print("❌ Невалидный запрос")
-                    case .decodingError(let decodingError):
-                        print("❌ Ошибка декодирования:", decodingError)
-                    }
-                }
                 completion(.failure(error))
             }
         }
-        task.resume()
     }
 }
