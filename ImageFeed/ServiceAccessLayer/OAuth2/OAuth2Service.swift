@@ -42,24 +42,45 @@ final class OAuth2Service {
             return
         }
         
-        let task = object(for: request) { [weak self] result in
+//        let task = object(for: request) { [weak self] result in
+//            DispatchQueue.main.async {
+//                self?.task = nil
+//                self?.lastCode = nil
+//                
+//                switch result {
+//                case .success(let body):
+//                    let authToken = body.accessToken
+//                    print("🟢 OAuth success! Token:", authToken)
+//                    self?.authToken = authToken
+//                    completion(.success(authToken))
+//                case .failure(let error):
+//                    print("🔴 OAuth error:", error)
+//                    completion(.failure(error))
+//                }
+//            }
+//        }
+        let task = urlSession.objectTask(for: request) { [weak self] (result: Result<OAuthTokenResponseBody, Error>) in
             DispatchQueue.main.async {
                 self?.task = nil
                 self?.lastCode = nil
-                
+
+//                UIBlockingProgressHUD.dismiss()
+//                guard let self = self else { return }
+
                 switch result {
                 case .success(let body):
                     let authToken = body.accessToken
+                    self?.authToken = authToken // сохраняем в свойство
+                    completion(.success(authToken)) // возвращаем наружу
                     print("🟢 OAuth success! Token:", authToken)
-                    self?.authToken = authToken
-                    completion(.success(authToken))
+
                 case .failure(let error):
+                    print("[fetchOAuthToken]: Ошибка запроса: \(error.localizedDescription)")
+                    completion(.failure(error)) // ошибка
                     print("🔴 OAuth error:", error)
-                    completion(.failure(error))
                 }
             }
         }
-        
         self.task = task
         task.resume()
     }

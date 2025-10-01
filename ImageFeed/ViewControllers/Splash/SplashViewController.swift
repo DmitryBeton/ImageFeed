@@ -12,20 +12,22 @@ final class SplashViewController: UIViewController {
     
     private let storage = OAuth2TokenStorage.shared
     private var didCheckAuth = false  // Добавляем флаг
-
+    
+    private let profileService = ProfileService.shared
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
         // Защита от повторного выполнения
         guard !didCheckAuth else { return }
         didCheckAuth = true
-
+        
         print("🚀 SplashViewController appeared")
         print("📋 Token check:", storage.token != nil ? "EXISTS" : "MISSING")
-
-        if storage.token != nil {
+        
+        if let token = storage.token {
             print("➡️ Switching to TabBar")
-            switchToTabBarController()
+            fetchProfile(token: token)
         } else {
             print("➡️ Showing auth screen")
             performSegue(withIdentifier: showAuthenticationScreenSegueIdentifier, sender: nil)
@@ -54,6 +56,24 @@ final class SplashViewController: UIViewController {
         print("✅ TabBarController created successfully")
         window.rootViewController = tabBarController
     }
+    
+    private func fetchProfile(token: String) {
+        UIBlockingProgressHUD.show()
+        profileService.fetchProfile(token) { [weak self] result in
+            UIBlockingProgressHUD.dismiss()
+            
+            guard let self = self else { return }
+            
+            switch result {
+            case let .success(profile):
+                ProfileImageService.shared.fetchProfileImageURL(username: profile.username) { _ in }
+                self.switchToTabBarController()
+            case let .failure(error):
+                print(error)
+                break
+            }
+        }
+    }
 }
 
 extension SplashViewController {
@@ -77,6 +97,9 @@ extension SplashViewController: AuthViewControllerDelegate {
     func didAuthenticate(_ vc: AuthViewController) {
         print("🎯 didAuthenticate called")
         vc.dismiss(animated: true)
-        switchToTabBarController()
+        guard let token = storage.token else {
+            return
+        }
+        fetchProfile(token: token)
     }
 }

@@ -53,12 +53,46 @@ final class ProfileViewController: UIViewController {
         return button
     }()
     
+    // MARK: - Vars
+    private let tokenStorage = OAuth2TokenStorage.shared
+    
+    private var profileImageServiceObserver: NSObjectProtocol?
+
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         setupConstrains()
+        if let profile = ProfileService.shared.profile {
+            print("🐳 Update profile details...")
+            updateProfileDetails(with: profile)
+        }
+        profileImageServiceObserver = NotificationCenter.default
+            .addObserver(
+                forName: ProfileImageService.didChangeNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                guard let self = self else { return }
+                self.updateAvatar()
+            }
+        updateAvatar()
+    }
+    
+    // MARK: - Private Methods
+    private func updateProfileDetails(with profile: Profile) {
+        nameLabel.text = profile.name.isEmpty ? "Имя не указано" : profile.name
+        usernameLabel.text = profile.name.isEmpty ? "@неизвестный_пользователь" : "@\(profile.username)"
+        descriptionLabel.text = profile.name.isEmpty ? "Профиль не заполнен" : profile.bio
+    }
+    
+    private func updateAvatar() {
+        guard
+            let profileImageURL = ProfileImageService.shared.avatarURL,
+            let url = URL(string: profileImageURL)
+            // TODO: Add Avatar
+        else { return }
     }
     
     // MARK: - Setup UI
@@ -101,6 +135,5 @@ final class ProfileViewController: UIViewController {
     // MARK: - Actions
     
     @objc private func logoutButtonTapped(_ sender: UIButton) {
-        UserDefaults.standard.removeObject(forKey: "token")
     }
 }
