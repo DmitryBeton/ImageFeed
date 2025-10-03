@@ -6,10 +6,11 @@
 //
 
 import Foundation
+import SwiftKeychainWrapper
 
 final class OAuth2TokenStorage {
     
-    private let dataStorage =  UserDefaults.standard
+    private let dataStorage =  KeychainWrapper.standard
     private let tokenKey = "token"
     
     static let shared = OAuth2TokenStorage()
