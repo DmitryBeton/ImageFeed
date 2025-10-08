@@ -139,7 +139,6 @@ final class ProfileViewController: UIViewController {
     }
     
     // MARK: - Layout
-    
     func setupConstrains() {
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16).isActive = true

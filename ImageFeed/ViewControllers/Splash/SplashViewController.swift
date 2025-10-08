@@ -18,12 +18,13 @@ final class SplashViewController: UIViewController {
 // MARK: - Vars
     private let showAuthenticationScreenSegueIdentifier = "ShowAuthenticationScreen"
     private let storage = OAuth2TokenStorage.shared
-    private var didCheckAuth = false  // Добавляем флаг
+    private var didCheckAuth = false
     private let profileService = ProfileService.shared
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
         .lightContent
     }
+    
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -40,7 +41,6 @@ final class SplashViewController: UIViewController {
         
         print("🚀 SplashViewController appeared")
         print("📋 Token check:", storage.token != nil ? "EXISTS" : "MISSING")
-        
         if let token = storage.token {
             print("➡️ Switching to TabBar")
             fetchProfile(token: token)
@@ -64,10 +64,16 @@ final class SplashViewController: UIViewController {
             return
         }
         
-        let tabBarController = UIStoryboard(name: "Main", bundle: .main)
-            .instantiateViewController(withIdentifier: "TabBarViewController")
+        // BEFORE:
+//        let tabBarController = UIStoryboard(name: "Main", bundle: .main)
+//            .instantiateViewController(withIdentifier: "TabBarViewController")
+//        print("✅ TabBarController created successfully")
+//        window.rootViewController = tabBarController
+        // AFTER:
+        let tabBarController = TabBarViewController()
         print("✅ TabBarController created successfully")
         window.rootViewController = tabBarController
+
     }
     
     private func fetchProfile(token: String) {
@@ -89,16 +95,22 @@ final class SplashViewController: UIViewController {
     }
     
     private func presentAuthViewController() {
-        let storyboard = UIStoryboard(name: "Main", bundle: .main)
-        guard let authViewController = storyboard.instantiateViewController(withIdentifier: "AuthViewController") as? AuthViewController else {
-            assertionFailure("Не удалось найти AuthViewController по id")
-            return
-        }
+        let authViewController = AuthViewController()
         authViewController.delegate = self
         authViewController.modalPresentationStyle = .fullScreen
         present(authViewController, animated: true)
     }
     
+    private func showErrorAlert() {
+        let alert = UIAlertController(
+            title: "Что-то пошло не так",
+            message: "Не удалось загрузить профиль",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+
     // MARK: - Setup UI
     private func setupUI() {
         view.backgroundColor = UIColor(red: 26/255, green: 27/255, blue: 34/255, alpha: 1)
