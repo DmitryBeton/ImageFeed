@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import Kingfisher
 
 final class ImagesListCell: UITableViewCell {
     static let reuseIdentifier = "ImagesListCell"
@@ -116,6 +117,18 @@ final class ImagesListCell: UITableViewCell {
         cellImage.image = image
     }
     
+    public func setCellImage(with url: URL) {
+        cellImage.kf.indicatorType = .activity
+        cellImage.kf.setImage(
+            with: url,
+            placeholder: UIImage(named: "placeholder"),
+            options: [
+                .transition(.fade(0.2)),
+                .cacheOriginalImage
+            ]
+        )
+    }
+
     public func setLikeButtonImage(_ image: UIImage) {
         likeButton.setImage(image, for: .normal)
     }

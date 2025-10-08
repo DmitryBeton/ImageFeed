@@ -8,6 +8,9 @@
 import UIKit
 
 final class SingleImageViewController: UIViewController {
+    // MARK: - Properties
+    var imageURL: URL?
+    
     var image: UIImage? {
         didSet {
             guard isViewLoaded, let image else { return }
@@ -15,7 +18,7 @@ final class SingleImageViewController: UIViewController {
             rescaleAndCenterImageInScrollView(image: image)
         }
     }
-    
+
     // MARK: - UI Elements
     private lazy var scrollView: UIScrollView = {
         let scrollView = UIScrollView()
@@ -50,6 +53,7 @@ final class SingleImageViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        loadImage()
         setupUI()
         setupConstraints()
         
@@ -61,7 +65,7 @@ final class SingleImageViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
-        // Вызываем центрирование после того, как view полностью сlayout'ена
+        // Вызываем центрирование после того, как view полностью загружена
         if let image = image {
             rescaleAndCenterImageInScrollView(image: image)
         }
@@ -71,7 +75,6 @@ final class SingleImageViewController: UIViewController {
     private func setupUI() {
         view.backgroundColor = .ypBlack
         
-        // Добавляем элементы на view
         view.addSubview(scrollView)
         scrollView.addSubview(imageView)
         view.addSubview(backButton)
@@ -119,6 +122,26 @@ final class SingleImageViewController: UIViewController {
     }
     
     // MARK: - Private Methods
+    private func loadImage() {
+        guard let imageURL = imageURL else { return }
+        
+        imageView.kf.indicatorType = .activity
+        imageView.kf.setImage(
+            with: imageURL,
+            options: [
+                .cacheOriginalImage
+            ]
+        ) { [weak self] result in
+            switch result {
+            case .success(let value):
+                self?.image = value.image
+                self?.rescaleAndCenterImageInScrollView(image: value.image)
+            case .failure(let error):
+                print("Ошибка загрузки изображения: \(error)")
+            }
+        }
+    }
+    
     private func rescaleAndCenterImageInScrollView(image: UIImage) {
         let minZoomScale = scrollView.minimumZoomScale
         let maxZoomScale = scrollView.maximumZoomScale
@@ -141,10 +164,10 @@ final class SingleImageViewController: UIViewController {
         scrollView.layoutIfNeeded()
         centerImage()
         //      может понадобится в будущем
-        //        let newContentSize = scrollView.contentSize
-        //        let x = (newContentSize.width - visibleRectSize.width) / 2
-        //        let y = (newContentSize.height - visibleRectSize.height) / 2
-        //        scrollView.setContentOffset(CGPoint(x: x, y: y), animated: false)
+//                let newContentSize = scrollView.contentSize
+//                let x = (newContentSize.width - visibleRectSize.width) / 2
+//                let y = (newContentSize.height - visibleRectSize.height) / 2
+//                scrollView.setContentOffset(CGPoint(x: x, y: y), animated: false)
     }
     
     // функция только для центрирования
