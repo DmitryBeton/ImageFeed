@@ -8,13 +8,18 @@
 import UIKit
 
 final class ImagesListViewController: UIViewController {
+    // MARK: - UI Elements
+    private lazy var tableView: UITableView = {
+        let tableView = UITableView()
+        tableView.register(ImagesListCell.self, forCellReuseIdentifier: ImagesListCell.reuseIdentifier)
+        tableView.contentInset = UIEdgeInsets(top: 12, left: 0, bottom: 12, right: 0)
+        tableView.separatorStyle = .none
+        tableView.backgroundColor = .ypBlack
+        return tableView
+    }()
     
-    @IBOutlet private var tableView: UITableView!
-    
+    // MARK: - Properties
     private let photoNames = (0..<20).map(String.init)
-    
-    private let segueID = "ShowSingleImage"
-    
     private lazy var dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .long
@@ -24,23 +29,32 @@ final class ImagesListViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        tableView.contentInset = UIEdgeInsets(top: 12, left: 0, bottom: 12, right: 0)
+        setupUI()
+        setupConstraints()
+        tableView.dataSource = self
+        tableView.delegate = self
     }
     
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        guard
-            segue.identifier == segueID,
-            let destination = segue.destination as? SingleImageViewController,
-            let indexPath = sender as? IndexPath
-        else {
-            super.prepare(for: segue, sender: sender)
-            return
-        }
-        
-        destination.image = UIImage(named: photoNames[indexPath.row])
+    // MARK: - Private Methods
+    private func setupUI() {
+        view.backgroundColor = .ypBlack
+        view.addSubview(tableView)
     }
+    
+    private func setupConstraints() {
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            tableView.topAnchor.constraint(equalTo: view.topAnchor),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+    }
+    
 }
 
+// MARK: - UITableViewDataSource
 extension ImagesListViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         photoNames.count
@@ -48,29 +62,26 @@ extension ImagesListViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: ImagesListCell.reuseIdentifier, for: indexPath) // 1
-        
         guard let imageListCell = cell as? ImagesListCell else { // 2
             return UITableViewCell()
         }
-        
         configCell(for: imageListCell, with: indexPath) // 3
         return imageListCell // 4
     }
 }
 
-extension ImagesListViewController {
+// MARK: - UITableViewDelegate
+extension ImagesListViewController: UITableViewDelegate {
     func configCell(for cell: ImagesListCell, with indexPath: IndexPath) {
         guard let image = UIImage(named: photoNames[indexPath.row]) else {
             return
         }
-        
-        cell.cellImage.image = image
-        cell.setupGradient()
-        cell.dateLabel.text = dateFormatter.string(from: Date())
+        cell.setCellImage(image)
+        cell.setLabelDate(dateFormatter.string(from: Date()))
         
         let isLiked = indexPath.row % 2 == 0
         let likeImage = isLiked ? UIImage(resource: .likeButtonOn) : UIImage(resource: .likeButtonOff)
-        cell.likeButton.setImage(likeImage, for: .normal)
+        cell.setLikeButtonImage(likeImage)
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -86,10 +97,16 @@ extension ImagesListViewController {
         return cellHeight
     }
     
-}
-
-extension ImagesListViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        performSegue(withIdentifier: segueID, sender: indexPath)
+        print("✅ cell select: \(indexPath.row)")
+        
+        let singleImageVC = SingleImageViewController()
+        singleImageVC.image = UIImage(named: photoNames[indexPath.row])
+        singleImageVC.modalPresentationStyle = .fullScreen
+        
+        present(singleImageVC, animated: true)
+        
+        // Снимаем выделение
+        tableView.deselectRow(at: indexPath, animated: true)
     }
 }
