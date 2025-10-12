@@ -59,12 +59,20 @@ final class ImagesListCell: UITableViewCell {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         setupUI()
         setupConstraints()
-        // FIX: - gradient
-        //        setupGradient()
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    // MARK: - Reuse
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        
+        // 🧹 Отменяем загрузку и очищаем контент
+        cellImage.kf.cancelDownloadTask()
+        cellImage.image = nil
+        dateLabel.text = nil
     }
     
     // MARK: - Private methods
@@ -117,7 +125,18 @@ final class ImagesListCell: UITableViewCell {
         cellImage.image = image
     }
     
-    public func setCellImage(with url: URL) {
+    //        public func setCellImage(with url: URL) {
+    //            cellImage.kf.indicatorType = .activity
+    //            cellImage.kf.setImage(
+    //                with: url,
+    //                placeholder: UIImage(named: "placeholder"),
+    //                options: [
+    //                    .transition(.fade(0.2)),
+    //                    .cacheOriginalImage
+    //                ]
+    //            )
+    //        }
+    func setCellImage(with url: URL, completion: (() -> Void)? = nil) {
         cellImage.kf.indicatorType = .activity
         cellImage.kf.setImage(
             with: url,
@@ -125,29 +144,21 @@ final class ImagesListCell: UITableViewCell {
             options: [
                 .transition(.fade(0.2)),
                 .cacheOriginalImage
+                
             ]
-        )
+        ) { [weak self] result in
+            switch result {
+            case .success(_):
+                // Картинка успешно загружена
+                self?.setNeedsLayout()
+                completion?()
+            case .failure:
+                break
+            }
+        }
     }
-
+    
     public func setLikeButtonImage(_ image: UIImage) {
         likeButton.setImage(image, for: .normal)
     }
-    
-    // MARK: - Gradient Setup
-    //    private func setupGradient() {
-    //        gradientView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
-    //        let gradientLayer = CAGradientLayer()
-    //        gradientLayer.frame = gradientView.bounds
-    //        gradientLayer.colors = [
-    //            UIColor.black.withAlphaComponent(0.0).cgColor,
-    //            UIColor.black.withAlphaComponent(0.4).cgColor
-    //        ]
-    //        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0)
-    //        gradientLayer.endPoint = CGPoint(x: 0.5, y: 1)
-    //        gradientView.layer.insertSublayer(gradientLayer, at: 0)
-    //        
-    //        gradientView.layer.cornerRadius = 16
-    //        gradientView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner] // Нижние углы
-    //        gradientView.layer.masksToBounds = true
-    //    }
 }

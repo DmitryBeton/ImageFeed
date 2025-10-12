@@ -15,9 +15,7 @@ final class ImagesListService {
     
     // MARK: - Properties
     private(set) var photos: [Photo] = []
-    
     private var lastLoadedPage: Int?
-    
     private var isFetching = false
     
     private var task: URLSessionTask?
@@ -33,41 +31,47 @@ final class ImagesListService {
         
         let nextPage = (lastLoadedPage ?? 0) + 1
         
-        guard let token = OAuth2TokenStorage.shared.token,
-              let request = makePhotoImageRequest(page: nextPage, token: token) else {
+        guard let token = OAuth2TokenStorage.shared.token else {
+            print("🔒 Нет токена")
             isFetching = false
             return
         }
-        print("🔄 Загружаем страницу: \(nextPage)")
         
+        guard let request = makePhotoImageRequest(page: nextPage, token: token) else {
+            print("⚠️ Не удалось создать запрос")
+            isFetching = false
+            return
+        }
+
+        print("🔄 Загружаем страницу: \(nextPage)")
+
         task?.cancel()
         task = URLSession.shared.objectTask(for: request) { [weak self] (result: Result<[PhotoResult], Error>) in
             guard let self = self else { return }
-            print("😭 Загружаем фото...")
             
             defer {
-                self.isFetching = false
-                self.task = nil
+                isFetching = false
             }
             
             switch result {
             case .success(let result):
-                let dateFormatter = ISO8601DateFormatter()
-                let newPhotos = result.map { result in
-                    Photo(id: result.id,
-                          size: CGSize(width: result.width, height: result.height),
-                          createdAt: result.createdAt.flatMap { dateFormatter.date(from: $0) },
-                          welcomeDescription: result.altDescription ?? "Нет описания",
-                          thumbImageURL: result.urls.thumb,
-                          largeImageURL: result.urls.full,
-                          isLiked: result.likedByUser)
-                }
-                
+                let newPhotos = self.mapPhotoResults(result)
                 DispatchQueue.main.async {
+//                    self.lastLoadedPage = nextPage
+//                    self.photos.append(contentsOf: newPhotos)
+                    let uniqueNewPhotos = newPhotos.filter { newPhoto in
+                        !self.photos.contains(where: { $0.id == newPhoto.id })
+                    }
+
+                    guard !uniqueNewPhotos.isEmpty else {
+                        print("⚠️ Новых фото нет — возможно, API вернул дубликаты")
+                        return
+                    }
+
                     self.lastLoadedPage = nextPage
-                    self.photos.append(contentsOf: newPhotos)
-                    print("✅ Загружено \(newPhotos.count) фотографий. Всего: \(self.photos.count)")
-                    
+                    self.photos.append(contentsOf: uniqueNewPhotos)
+                    print("✅ Добавлено \(uniqueNewPhotos.count) уникальных фото. Всего: \(self.photos.count)")
+
                     NotificationCenter.default.post(
                         name: ImagesListService.didChangeNotification,
                         object: self
@@ -96,8 +100,23 @@ final class ImagesListService {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        print("REQUEST CREATED!!!")
         return request
+    }
+    
+    private func mapPhotoResults(_ results: [PhotoResult]) -> [Photo] {
+        let formatter = ISO8601DateFormatter()
+        return results.map { result in
+            Photo(
+                id: result.id,
+                size: CGSize(width: result.width, height: result.height),
+                createdAt: result.createdAt.flatMap { formatter.date(from: $0) },
+                welcomeDescription: result.altDescription ?? "Нет описания",
+                thumbImageURL: result.urls.thumb,
+                largeImageURL: result.urls.full,
+                regularImageURL: result.urls.regular,
+                isLiked: result.likedByUser
+            )
+        }
     }
 }
 
