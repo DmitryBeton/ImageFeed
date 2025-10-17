@@ -18,7 +18,7 @@ final class SingleImageViewController: UIViewController {
             rescaleAndCenterImageInScrollView(image: image)
         }
     }
-
+    
     // MARK: - UI Elements
     private lazy var scrollView: UIScrollView = {
         let scrollView = UIScrollView()
@@ -125,13 +125,14 @@ final class SingleImageViewController: UIViewController {
     private func loadImage() {
         UIBlockingProgressHUD.show()
         guard let imageURL = imageURL else { return }
-
+        
         imageView.kf.setImage(with: imageURL) { [weak self] result in
             UIBlockingProgressHUD.dismiss()
             
             guard let self = self else { return }
             switch result {
             case .success(let imageResult):
+                self.image = imageResult.image
                 self.rescaleAndCenterImageInScrollView(image: imageResult.image)
             case .failure:
                 self.showError()
@@ -141,29 +142,28 @@ final class SingleImageViewController: UIViewController {
     
     private func rescaleAndCenterImageInScrollView(image: UIImage) {
         view.layoutIfNeeded()
-
         let visibleSize = scrollView.bounds.size
         let imageSize = image.size
-
+        
         // Рассчитываем масштаб, чтобы картинка полностью помещалась
         let hScale = visibleSize.width / imageSize.width
         let vScale = visibleSize.height / imageSize.height
         let scale = min(max(scrollView.minimumZoomScale, min(hScale, vScale)), scrollView.maximumZoomScale)
-
+        
         // Устанавливаем новый масштаб
         scrollView.minimumZoomScale = scale
         scrollView.zoomScale = scale
-
+        
         // Вычисляем размеры imageView
         let newWidth = imageSize.width * scale
         let newHeight = imageSize.height * scale
         imageView.frame.size = CGSize(width: newWidth, height: newHeight)
         scrollView.contentSize = imageView.frame.size
-
+        
         // Центрируем
         centerImage()
     }
-
+    
     // функция только для центрирования
     private func centerImage() {
         let boundsSize = scrollView.bounds.size
