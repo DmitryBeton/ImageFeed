@@ -44,6 +44,7 @@ final class AuthViewController: UIViewController {
     }
     
     @objc private func presentWebViewViewController() {
+        print("👆 Кнопка 'Войти' нажата")
         let webViewViewController = WebViewViewController()
         webViewViewController.delegate = self
         

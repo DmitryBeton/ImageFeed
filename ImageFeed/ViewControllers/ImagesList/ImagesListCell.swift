@@ -8,8 +8,14 @@
 import UIKit
 import Kingfisher
 
+protocol ImagesListCellDelegate: AnyObject {
+    func imageListCellDidTapLike(_ cell: ImagesListCell)
+}
+
 final class ImagesListCell: UITableViewCell {
     static let reuseIdentifier = "ImagesListCell"
+    weak var delegate: ImagesListCellDelegate?
+    
     // MARK: - UI Elements
     private let cellImage: UIImageView = {
         let imageView = UIImageView()
@@ -30,7 +36,7 @@ final class ImagesListCell: UITableViewCell {
         let button = UIButton(type: .custom)
         button.setImage(UIImage(resource: .likeButtonOn), for: .normal)
         button.addTarget(self,
-                         action: #selector(didLiked),
+                         action: #selector(likeButtonClicked),
                          for: .touchUpInside)
         return button
     }()
@@ -113,9 +119,10 @@ final class ImagesListCell: UITableViewCell {
         ])
     }
     
-    @objc private func didLiked() {
-        
+    @objc private func likeButtonClicked() {
+        delegate?.imageListCellDidTapLike(self)
     }
+    
     // MARK: - Public methods
     public func setLabelDate(_ text: String) {
         dateLabel.text = text
@@ -125,18 +132,7 @@ final class ImagesListCell: UITableViewCell {
         cellImage.image = image
     }
     
-    //        public func setCellImage(with url: URL) {
-    //            cellImage.kf.indicatorType = .activity
-    //            cellImage.kf.setImage(
-    //                with: url,
-    //                placeholder: UIImage(named: "placeholder"),
-    //                options: [
-    //                    .transition(.fade(0.2)),
-    //                    .cacheOriginalImage
-    //                ]
-    //            )
-    //        }
-    func setCellImage(with url: URL, completion: (() -> Void)? = nil) {
+    public func setCellImage(with url: URL, completion: (() -> Void)? = nil) {
         cellImage.kf.indicatorType = .activity
         cellImage.kf.setImage(
             with: url,
@@ -160,5 +156,13 @@ final class ImagesListCell: UITableViewCell {
     
     public func setLikeButtonImage(_ image: UIImage) {
         likeButton.setImage(image, for: .normal)
+    }
+    
+    public func setIsLiked(_ isLiked: Bool) {
+        if isLiked {
+            self.setLikeButtonImage(UIImage(resource: .likeButtonOn))
+        } else {
+            self.setLikeButtonImage(UIImage(resource: .likeButtonOff))
+        }
     }
 }

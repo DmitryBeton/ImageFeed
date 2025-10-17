@@ -26,7 +26,7 @@ final class ImagesListViewController: UIViewController {
         return formatter
     }()
     
-    private let imageListService = ImagesListService.shared
+    private let imagesListService = ImagesListService.shared
     private var photos: [Photo] = []
     
     // MARK: - Lifecycle
@@ -36,7 +36,7 @@ final class ImagesListViewController: UIViewController {
         setupConstraints()
         setupObservers()
         
-        imageListService.fetchPhotosNextPage()
+        imagesListService.fetchPhotosNextPage()
     }
     
     // MARK: - Private Methods
@@ -71,8 +71,8 @@ final class ImagesListViewController: UIViewController {
     
     private func updateTableViewAnimated() {
         let oldCount = photos.count
-        let newCount = imageListService.photos.count
-        photos = imageListService.photos
+        let newCount = imagesListService.photos.count
+        photos = imagesListService.photos
         if oldCount != newCount {
             tableView.performBatchUpdates {
                 let indexPaths = (oldCount..<newCount).map { i in
@@ -97,6 +97,7 @@ extension ImagesListViewController: UITableViewDataSource {
         }
         let photo = photos[indexPath.row]
         configCell(for: imageListCell, with: photo, at: indexPath) // 3
+        imageListCell.delegate = self
         return imageListCell // 4
     }
 }
@@ -120,7 +121,7 @@ extension ImagesListViewController: UITableViewDelegate {
                 self.tableView.endUpdates()
             }
         }
-
+        
         let likeImage = photo.isLiked ? UIImage(resource: .likeButtonOn) : UIImage(resource: .likeButtonOff)
         cell.setLikeButtonImage(likeImage)
     }
@@ -153,8 +154,57 @@ extension ImagesListViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
         if indexPath.row + 1 == photos.count {
-            imageListService.fetchPhotosNextPage()
+            imagesListService.fetchPhotosNextPage()
         }
         
     }
+}
+
+extension ImagesListViewController: ImagesListCellDelegate {
+    
+    func imageListCellDidTapLike(_ cell: ImagesListCell) {
+        
+        guard let indexPath = tableView.indexPath(for: cell) else { return }
+        let photo = photos[indexPath.row]
+        // Покажем лоадер
+        UIBlockingProgressHUD.show()
+        imagesListService.changeLike(photoId: photo.id, isLike: photo.isLiked) { result in
+            switch result {
+            case .success:
+                // Синхронизируем массив картинок с сервисом
+                self.photos = self.imagesListService.photos
+                // Изменим индикацию лайка картинки
+                cell.setIsLiked(self.photos[indexPath.row].isLiked)
+                UIBlockingProgressHUD.dismiss()
+            case .failure(let error):
+                UIBlockingProgressHUD.dismiss()
+                // Покажем, что что-то пошло не так
+                let alert = UIAlertController(
+                    title: "Ошибка",
+                    message: "Не удалось изменить лайк: \(error.localizedDescription)",
+                    preferredStyle: .alert
+                )
+                alert.addAction(UIAlertAction(title: "OK", style: .default))
+                self.present(alert, animated: true)
+            }
+        }
+    }
+//    func imageListCellDidTapLike(_ cell: ImagesListCell) {
+//        guard let indexPath = tableView.indexPath(for: cell) else { return }
+//        let photo = photos[indexPath.row]
+//        
+//        imageListService.changeLike(photoId: photo.id, isLike: photo.isLiked) { [weak self] result in
+//            guard let self = self else { return }
+//            DispatchQueue.main.async {
+//                switch result {
+//                case .success:
+//                    // локально обновим состояние UI
+//                    cell.setIsLiked(!photo.isLiked)
+//                case .failure(let error):
+//                    print("❌ Ошибка при изменении лайка: \(error.localizedDescription)")
+//                }
+//            }
+//        }
+//    }
+//}
 }

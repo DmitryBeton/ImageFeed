@@ -1,34 +1,21 @@
 import Foundation
 
-private struct ProfileImage: Codable {
-    let small: String
-    let medium: String
-    let large: String
-    
-    private enum CodingKeys: String, CodingKey {
-        case small
-        case medium
-        case large
-    }
-}
-
-private struct UserResult: Codable {
-    let profileImage: ProfileImage
-    
-    private enum CodingKeys: String, CodingKey {
-        case profileImage = "profile_image"
-    }
-}
-
 final class ProfileImageService {
+    // MARK: - Singleton
     static let shared = ProfileImageService()
     private init() {}
     
+    // MARK: - Properties
     static let didChangeNotification = Notification.Name(rawValue: "ProfileImageProviderDidChange")
     
     private(set) var avatarURL: String?
     
     private var task: URLSessionTask?
+    
+    // MARK: - Public methods
+    func cleanProfileImageService() {
+        avatarURL = nil
+    }
     
     func fetchProfileImageURL(username: String, _ completion: @escaping (Result<String, Error>) -> Void) {
         task?.cancel()
@@ -63,6 +50,7 @@ final class ProfileImageService {
         task.resume()
     }
     
+    // MARK: - Private methods
     private func makeProfileImageRequest(username: String, token: String) -> URLRequest? {
         guard let url = URL(string: "https://api.unsplash.com/users/\(username)") else { return nil
         }

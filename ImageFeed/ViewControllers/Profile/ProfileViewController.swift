@@ -96,7 +96,7 @@ final class ProfileViewController: UIViewController {
             let url = URL(string: profileImageURL)
         else { return }
         
-        let placeholderImage = UIImage(systemName: "person.circle.fill")?
+        let placeholderImage = UIImage(resource: .stub)
             .withTintColor(.lightGray, renderingMode: .alwaysOriginal)
             .withConfiguration(UIImage.SymbolConfiguration(pointSize: 70, weight: .regular, scale: .large))
         
@@ -164,7 +164,16 @@ final class ProfileViewController: UIViewController {
     }
     
     // MARK: - Actions
-    
     @objc private func logoutButtonTapped(_ sender: UIButton) {
+        let alert = UIAlertController(
+            title: "Пока, пока!",
+            message: "Уверены, что хотите выйти?",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Да", style: .default) { _ in
+            ProfileLogoutService.shared.logout() })
+        alert.addAction(UIAlertAction(title: "Нет", style: .default))
+        self.present(alert, animated: true)
+
     }
 }

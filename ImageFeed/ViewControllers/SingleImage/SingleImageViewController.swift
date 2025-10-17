@@ -123,53 +123,47 @@ final class SingleImageViewController: UIViewController {
     
     // MARK: - Private Methods
     private func loadImage() {
+        UIBlockingProgressHUD.show()
         guard let imageURL = imageURL else { return }
-        
-        imageView.kf.indicatorType = .activity
-        imageView.kf.setImage(
-            with: imageURL,
-            options: [
-                .cacheOriginalImage
-            ]
-        ) { [weak self] result in
+
+        imageView.kf.setImage(with: imageURL) { [weak self] result in
+            UIBlockingProgressHUD.dismiss()
+            
+            guard let self = self else { return }
             switch result {
-            case .success(let value):
-                self?.image = value.image
-                self?.rescaleAndCenterImageInScrollView(image: value.image)
-            case .failure(let error):
-                print("Ошибка загрузки изображения: \(error)")
+            case .success(let imageResult):
+                self.rescaleAndCenterImageInScrollView(image: imageResult.image)
+            case .failure:
+                self.showError()
             }
         }
     }
     
     private func rescaleAndCenterImageInScrollView(image: UIImage) {
-        let minZoomScale = scrollView.minimumZoomScale
-        let maxZoomScale = scrollView.maximumZoomScale
         view.layoutIfNeeded()
-        let visibleRectSize = scrollView.bounds.size
+
+        let visibleSize = scrollView.bounds.size
         let imageSize = image.size
-        let hScale = visibleRectSize.width / imageSize.width
-        let vScale = visibleRectSize.height / imageSize.height
-        let scale = min(maxZoomScale, max(minZoomScale, min(hScale, vScale)))
-        
-        // Устанавливаем размер imageView
-        imageView.frame.size = CGSize(
-            width: imageSize.width * scale,
-            height: imageSize.height * scale
-        )
-        
+
+        // Рассчитываем масштаб, чтобы картинка полностью помещалась
+        let hScale = visibleSize.width / imageSize.width
+        let vScale = visibleSize.height / imageSize.height
+        let scale = min(max(scrollView.minimumZoomScale, min(hScale, vScale)), scrollView.maximumZoomScale)
+
+        // Устанавливаем новый масштаб
+        scrollView.minimumZoomScale = scale
+        scrollView.zoomScale = scale
+
+        // Вычисляем размеры imageView
+        let newWidth = imageSize.width * scale
+        let newHeight = imageSize.height * scale
+        imageView.frame.size = CGSize(width: newWidth, height: newHeight)
         scrollView.contentSize = imageView.frame.size
-        
-        scrollView.setZoomScale(scale, animated: false)
-        scrollView.layoutIfNeeded()
+
+        // Центрируем
         centerImage()
-        //      может понадобится в будущем
-//                let newContentSize = scrollView.contentSize
-//                let x = (newContentSize.width - visibleRectSize.width) / 2
-//                let y = (newContentSize.height - visibleRectSize.height) / 2
-//                scrollView.setContentOffset(CGPoint(x: x, y: y), animated: false)
     }
-    
+
     // функция только для центрирования
     private func centerImage() {
         let boundsSize = scrollView.bounds.size
@@ -193,6 +187,31 @@ final class SingleImageViewController: UIViewController {
             bottom: verticalInset,
             right: horizontalInset
         )
+    }
+    
+    private func showError() {
+        let alert = UIAlertController(
+            title: nil,
+            message: "Что-то пошло не так. Попробовать ещё раз?",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Не надо", style: .default))
+        alert.addAction(UIAlertAction(title: "Повторить", style: .default) { [weak self] _ in
+            UIBlockingProgressHUD.show()
+            guard let imageURL = self?.imageURL else { return }
+            self?.imageView.kf.setImage(with: imageURL) { result in
+                UIBlockingProgressHUD.dismiss()
+                
+                guard let self = self else { return }
+                switch result {
+                case .success(let imageResult):
+                    self.rescaleAndCenterImageInScrollView(image: imageResult.image)
+                case .failure:
+                    self.showError()
+                }
+            }
+        })
+        self.present(alert, animated: true)
     }
 }
 
