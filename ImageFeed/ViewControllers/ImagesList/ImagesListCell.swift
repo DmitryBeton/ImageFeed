@@ -43,28 +43,20 @@ final class ImagesListCell: UITableViewCell {
     
     private let gradientView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.black.withAlphaComponent(0.5)
-        let gradientLayer = CAGradientLayer()
-        gradientLayer.frame = view.bounds
-        gradientLayer.colors = [
-            UIColor.black.withAlphaComponent(0.0).cgColor,
-            UIColor.black.withAlphaComponent(0.4).cgColor
-        ]
-        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0)
-        gradientLayer.endPoint = CGPoint(x: 0.5, y: 1)
-        view.layer.insertSublayer(gradientLayer, at: 0)
-        
         view.layer.cornerRadius = 16
-        view.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner] // Нижние углы
+        view.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
         view.layer.masksToBounds = true
         return view
     }()
-    
+
+    private let gradientLayer = CAGradientLayer()
+
     // MARK: - Initializers
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         setupUI()
         setupConstraints()
+        setupGradient()
     }
     
     required init?(coder: NSCoder) {
@@ -81,7 +73,23 @@ final class ImagesListCell: UITableViewCell {
         dateLabel.text = nil
     }
     
+    // MARK: - LayoutSubviews
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        gradientLayer.frame = gradientView.bounds
+    }
+
     // MARK: - Private methods
+    private func setupGradient() {
+        gradientLayer.colors = [
+            UIColor.black.withAlphaComponent(0.0).cgColor,
+            UIColor.black.withAlphaComponent(0.85).cgColor
+        ]
+        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0.0)
+        gradientLayer.endPoint = CGPoint(x: 0.5, y: 1.0)
+        gradientView.layer.insertSublayer(gradientLayer, at: 0)
+    }
+
     private func setupUI() {
         backgroundColor = .ypBlack
         selectionStyle = .none
