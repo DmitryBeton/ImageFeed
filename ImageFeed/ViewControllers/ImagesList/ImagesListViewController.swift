@@ -113,8 +113,9 @@ extension ImagesListViewController: UITableViewDelegate {
         
         if let url = URL(string: photo.regularImageURL) {
             cell.setCellImage(with: url) { [weak self] in
-                guard let self = self else { return }
-                guard indexPath.row < self.photos.count else { return } // защита от рассинхронизации
+                guard let self = self,
+                      indexPath.row < self.photos.count
+                else { return }
                 // Когда фото загрузилось, обновляем только эту ячейку
                 self.tableView.beginUpdates()
                 self.tableView.reloadRows(at: [indexPath], with: .automatic)

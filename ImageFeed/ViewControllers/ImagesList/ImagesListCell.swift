@@ -48,9 +48,9 @@ final class ImagesListCell: UITableViewCell {
         view.layer.masksToBounds = true
         return view
     }()
-
+    
     private let gradientLayer = CAGradientLayer()
-
+    
     // MARK: - Initializers
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -59,10 +59,15 @@ final class ImagesListCell: UITableViewCell {
         setupGradient()
     }
     
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
-    
+    //
+    //    required init?(coder: NSCoder) {
+    //        fatalError("init(coder:) has not been implemented")
+    //    }
+    //
     // MARK: - Reuse
     override func prepareForReuse() {
         super.prepareForReuse()
@@ -78,7 +83,7 @@ final class ImagesListCell: UITableViewCell {
         super.layoutSubviews()
         gradientLayer.frame = gradientView.bounds
     }
-
+    
     // MARK: - Private methods
     private func setupGradient() {
         gradientLayer.colors = [
@@ -89,7 +94,7 @@ final class ImagesListCell: UITableViewCell {
         gradientLayer.endPoint = CGPoint(x: 0.5, y: 1.0)
         gradientView.layer.insertSublayer(gradientLayer, at: 0)
     }
-
+    
     private func setupUI() {
         backgroundColor = .ypBlack
         selectionStyle = .none
@@ -132,19 +137,19 @@ final class ImagesListCell: UITableViewCell {
     }
     
     // MARK: - Public methods
-    public func setLabelDate(_ text: String) {
+    func setLabelDate(_ text: String) {
         dateLabel.text = text
     }
     
-    public func setCellImage(_ image: UIImage) {
+    func setCellImage(_ image: UIImage) {
         cellImage.image = image
     }
     
-    public func setCellImage(with url: URL, completion: (() -> Void)? = nil) {
+    func setCellImage(with url: URL, completion: (() -> Void)? = nil) {
         cellImage.kf.indicatorType = .activity
         cellImage.kf.setImage(
             with: url,
-            placeholder: UIImage(named: "placeholder"),
+            placeholder: UIImage(resource: .placeholder),
             options: [
                 .transition(.fade(0.2)),
                 .cacheOriginalImage
@@ -152,8 +157,7 @@ final class ImagesListCell: UITableViewCell {
             ]
         ) { [weak self] result in
             switch result {
-            case .success(_):
-                // Картинка успешно загружена
+            case .success:
                 self?.setNeedsLayout()
                 completion?()
             case .failure:
@@ -162,15 +166,11 @@ final class ImagesListCell: UITableViewCell {
         }
     }
     
-    public func setLikeButtonImage(_ image: UIImage) {
+    func setLikeButtonImage(_ image: UIImage) {
         likeButton.setImage(image, for: .normal)
     }
     
-    public func setIsLiked(_ isLiked: Bool) {
-        if isLiked {
-            self.setLikeButtonImage(UIImage(resource: .likeButtonOn))
-        } else {
-            self.setLikeButtonImage(UIImage(resource: .likeButtonOff))
-        }
+    func setIsLiked(_ isLiked: Bool) {
+        setLikeButtonImage(UIImage(resource: isLiked ? .likeButtonOn : .likeButtonOff))
     }
 }

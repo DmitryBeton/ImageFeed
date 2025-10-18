@@ -21,15 +21,18 @@ final class ImagesListService {
     private var task: URLSessionTask?
     private let urlSession = URLSession.shared
     
+    private static let dateFormatter: ISO8601DateFormatter = {
+        ISO8601DateFormatter()
+    }()
     // MARK: - Notification
-    static let didChangeNotification = Notification.Name(rawValue: "ImagesListServiceDidChange")
+    static let didChangeNotification = Notification.Name("ImagesListServiceDidChange")
     
     // MARK: - Public methods
     func cleanImagesListService() {
         photos = []
         lastLoadedPage = nil
     }
-
+    
     func fetchPhotosNextPage() {
         guard !isFetching else { return }
         isFetching = true
@@ -62,8 +65,6 @@ final class ImagesListService {
             case .success(let result):
                 let newPhotos = self.mapPhotoResults(result)
                 DispatchQueue.main.async {
-                    //                    self.lastLoadedPage = nextPage
-                    //                    self.photos.append(contentsOf: newPhotos)
                     let uniqueNewPhotos = newPhotos.filter { newPhoto in
                         !self.photos.contains(where: { $0.id == newPhoto.id })
                     }
@@ -101,50 +102,49 @@ final class ImagesListService {
             print("⚠️ Неверный URL")
             return
         }
-
+        
         var request = URLRequest(url: url)
         request.httpMethod = isLike ? "DELETE" : "POST"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
+        
         let task = urlSession.objectTask(for: request) { [weak self] (result: Result<LikeResponse, Error>) in
             guard let self = self else { return }
-
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let response):
-                    if let index = self.photos.firstIndex(where: { $0.id == photoId }) {
-                        let photo = self.photos[index]
-                        let newPhoto = Photo(
-                            id: photo.id,
-                            size: photo.size,
-                            createdAt: photo.createdAt,
-                            welcomeDescription: photo.welcomeDescription,
-                            thumbImageURL: photo.thumbImageURL,
-                            largeImageURL: photo.largeImageURL,
-                            regularImageURL: photo.regularImageURL,
-                            isLiked: response.photo.likedByUser
-                        )
-                        self.photos = self.photos.withReplaced(itemAt: index, newValue: newPhoto)
-                    }
-
-                    NotificationCenter.default.post(
-                        name: ImagesListService.didChangeNotification,
-                        object: self
+            
+            switch result {
+            case .success(let response):
+                if let index = self.photos.firstIndex(where: { $0.id == photoId }) {
+                    let photo = self.photos[index]
+                    let newPhoto = Photo(
+                        id: photo.id,
+                        size: photo.size,
+                        createdAt: photo.createdAt,
+                        welcomeDescription: photo.welcomeDescription,
+                        thumbImageURL: photo.thumbImageURL,
+                        largeImageURL: photo.largeImageURL,
+                        regularImageURL: photo.regularImageURL,
+                        isLiked: response.photo.likedByUser
                     )
-                    print(response.photo.likedByUser)
-                    completion(.success(()))
-
-                case .failure(let error):
-                    print("❌ Ошибка changeLike: \(error)")
-                    completion(.failure(error))
+                    self.photos = self.photos.withReplaced(itemAt: index, newValue: newPhoto)
                 }
+                
+                NotificationCenter.default.post(
+                    name: ImagesListService.didChangeNotification,
+                    object: self
+                )
+                print(response.photo.likedByUser)
+                completion(.success(()))
+                
+            case .failure(let error):
+                print("❌ Ошибка changeLike: \(error)")
+                completion(.failure(error))
             }
+            
         }
-
+        
         task.resume()
     }
-
+    
     // MARK: - Private methods
     private func makePhotoImageRequest(page: Int, perPage: Int = 10, token: String) -> URLRequest? {
         var urlComponents = URLComponents(string: "https://api.unsplash.com/photos")
@@ -163,12 +163,11 @@ final class ImagesListService {
     }
     
     private func mapPhotoResults(_ results: [PhotoResult]) -> [Photo] {
-        let formatter = ISO8601DateFormatter()
         return results.map { result in
             Photo(
                 id: result.id,
                 size: CGSize(width: result.width, height: result.height),
-                createdAt: result.createdAt.flatMap { formatter.date(from: $0) },
+                createdAt: result.createdAt.flatMap { ImagesListService.dateFormatter.date(from: $0) },
                 welcomeDescription: result.altDescription ?? "Нет описания",
                 thumbImageURL: result.urls.thumb,
                 largeImageURL: result.urls.full,
@@ -178,12 +177,4 @@ final class ImagesListService {
         }
     }
     
-}
-
-extension Array {
-    func withReplaced(itemAt index: Int, newValue: Element) -> [Element] {
-        var copy = self
-        copy[index] = newValue
-        return copy
-    }
 }
