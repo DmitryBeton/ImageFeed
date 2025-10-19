@@ -15,6 +15,7 @@ final class WebViewViewController: UIViewController {
     private lazy var webView: WKWebView = {
         let webView = WKWebView()
         webView.translatesAutoresizingMaskIntoConstraints = false
+        webView.overrideUserInterfaceStyle = .light
         return webView
     }()
     
@@ -86,13 +87,15 @@ final class WebViewViewController: UIViewController {
                  self?.updateProgress()
              })
     }
-
+    
     private func updateProgress() {
         progressView.progress = Float(webView.estimatedProgress)
         progressView.isHidden = fabs(webView.estimatedProgress - 1.0) <= 0.0001
     }
     
     private func loadAuthView() {
+        print("🌐 Loading Unsplash auth page…")
+        
         guard var urlComponents = URLComponents(string: WebViewConstants.unsplashAuthorizeURLString) else {
             return
         }
@@ -105,12 +108,13 @@ final class WebViewViewController: UIViewController {
         ]
         
         guard let url = urlComponents.url else {
+            print("❌ Failed to create URL")
             return
         }
-        
+        print("🔗 Final Auth URL:", url.absoluteString)
         let request = URLRequest(url: url)
         webView.load(request)
-        updateProgress()
+//        updateProgress()
     }
     
     @objc private func didTapBackButton() {
@@ -125,9 +129,13 @@ extension WebViewViewController: WKNavigationDelegate {
         decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
     ) {
         if let code = code(from: navigationAction) {
+            print("✅ Received auth code: \(code)")
             delegate?.webViewViewController(self, didAuthenticateWithCode: code)
             decisionHandler(.cancel)
         } else {
+            if let url = navigationAction.request.url {
+                print("🌐 Navigating to: \(url.absoluteString)")
+            }
             decisionHandler(.allow)
         }
     }
@@ -140,13 +148,13 @@ extension WebViewViewController: WKNavigationDelegate {
             let items = urlComponents.queryItems,
             let codeItem = items.first(where: { $0.name == "code" })
         {
+            print("🔍 Checking URL for auth code: \(url.absoluteString)")
             return codeItem.value
         } else {
             return nil
         }
     }
-}
-
+    
 //    override func viewDidAppear(_ animated: Bool) {
 //        super.viewDidAppear(animated)
 //        webView.addObserver(
@@ -156,12 +164,12 @@ extension WebViewViewController: WKNavigationDelegate {
 //            context: nil)
 //        updateProgress()
 //    }
-
+//
 //    override func viewWillDisappear(_ animated: Bool) {
 //        super.viewWillDisappear(animated)
 //        webView.removeObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress), context: nil)
 //    }
-
+//
 //    override func observeValue(
 //        forKeyPath keyPath: String?,
 //        of object: Any?,
@@ -174,3 +182,4 @@ extension WebViewViewController: WKNavigationDelegate {
 //            super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
 //        }
 //    }
+}

@@ -23,12 +23,12 @@ final class TabBarViewController: UITabBarController {
         appearance.backgroundColor = UIColor(red: 26/255, green: 27/255, blue: 34/255, alpha: 1.0) // #1A1B22
         
         appearance.stackedLayoutAppearance.selected.iconColor = .white
-        appearance.stackedLayoutAppearance.normal.iconColor = .white
-        
+        appearance.stackedLayoutAppearance.normal.iconColor = .lightGray
         tabBar.standardAppearance = appearance
-                
-        tabBar.tintColor = .white // selected item color
-        tabBar.unselectedItemTintColor = .white // unselected items color
+        
+        tabBar.barTintColor = .ypBlack
+        tabBar.tintColor = .white
+        tabBar.unselectedItemTintColor = .lightGray
     }
     
     private func setupViewControllers() {

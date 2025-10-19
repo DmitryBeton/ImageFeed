@@ -6,9 +6,16 @@
 //
 
 import UIKit
+import Kingfisher
+
+protocol ImagesListCellDelegate: AnyObject {
+    func imageListCellDidTapLike(_ cell: ImagesListCell)
+}
 
 final class ImagesListCell: UITableViewCell {
     static let reuseIdentifier = "ImagesListCell"
+    weak var delegate: ImagesListCellDelegate?
+    
     // MARK: - UI Elements
     private let cellImage: UIImageView = {
         let imageView = UIImageView()
@@ -29,44 +36,65 @@ final class ImagesListCell: UITableViewCell {
         let button = UIButton(type: .custom)
         button.setImage(UIImage(resource: .likeButtonOn), for: .normal)
         button.addTarget(self,
-                         action: #selector(didLiked),
+                         action: #selector(likeButtonClicked),
                          for: .touchUpInside)
         return button
     }()
     
     private let gradientView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.black.withAlphaComponent(0.5)
-        let gradientLayer = CAGradientLayer()
-        gradientLayer.frame = view.bounds
-        gradientLayer.colors = [
-            UIColor.black.withAlphaComponent(0.0).cgColor,
-            UIColor.black.withAlphaComponent(0.4).cgColor
-        ]
-        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0)
-        gradientLayer.endPoint = CGPoint(x: 0.5, y: 1)
-        view.layer.insertSublayer(gradientLayer, at: 0)
-        
         view.layer.cornerRadius = 16
-        view.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner] // Нижние углы
+        view.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
         view.layer.masksToBounds = true
         return view
     }()
+    
+    private let gradientLayer = CAGradientLayer()
     
     // MARK: - Initializers
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         setupUI()
         setupConstraints()
-        // FIX: - gradient
-        //        setupGradient()
+        setupGradient()
     }
     
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
+    }
+    //
+    //    required init?(coder: NSCoder) {
+    //        fatalError("init(coder:) has not been implemented")
+    //    }
+    //
+    // MARK: - Reuse
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        
+        // 🧹 Отменяем загрузку и очищаем контент
+        cellImage.kf.cancelDownloadTask()
+        cellImage.image = nil
+        dateLabel.text = nil
+    }
+    
+    // MARK: - LayoutSubviews
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        gradientLayer.frame = gradientView.bounds
     }
     
     // MARK: - Private methods
+    private func setupGradient() {
+        gradientLayer.colors = [
+            UIColor.black.withAlphaComponent(0.0).cgColor,
+            UIColor.black.withAlphaComponent(0.85).cgColor
+        ]
+        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0.0)
+        gradientLayer.endPoint = CGPoint(x: 0.5, y: 1.0)
+        gradientView.layer.insertSublayer(gradientLayer, at: 0)
+    }
+    
     private func setupUI() {
         backgroundColor = .ypBlack
         selectionStyle = .none
@@ -104,37 +132,45 @@ final class ImagesListCell: UITableViewCell {
         ])
     }
     
-    @objc private func didLiked() {
-        
+    @objc private func likeButtonClicked() {
+        delegate?.imageListCellDidTapLike(self)
     }
+    
     // MARK: - Public methods
-    public func setLabelDate(_ text: String) {
+    func setLabelDate(_ text: String) {
         dateLabel.text = text
     }
     
-    public func setCellImage(_ image: UIImage) {
+    func setCellImage(_ image: UIImage) {
         cellImage.image = image
     }
     
-    public func setLikeButtonImage(_ image: UIImage) {
+    func setCellImage(with url: URL, completion: (() -> Void)? = nil) {
+        cellImage.kf.indicatorType = .activity
+        cellImage.kf.setImage(
+            with: url,
+            placeholder: UIImage(resource: .placeholder),
+            options: [
+                .transition(.fade(0.2)),
+                .cacheOriginalImage
+                
+            ]
+        ) { [weak self] result in
+            switch result {
+            case .success:
+                self?.setNeedsLayout()
+                completion?()
+            case .failure:
+                break
+            }
+        }
+    }
+    
+    func setLikeButtonImage(_ image: UIImage) {
         likeButton.setImage(image, for: .normal)
     }
     
-    // MARK: - Gradient Setup
-    //    private func setupGradient() {
-    //        gradientView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
-    //        let gradientLayer = CAGradientLayer()
-    //        gradientLayer.frame = gradientView.bounds
-    //        gradientLayer.colors = [
-    //            UIColor.black.withAlphaComponent(0.0).cgColor,
-    //            UIColor.black.withAlphaComponent(0.4).cgColor
-    //        ]
-    //        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0)
-    //        gradientLayer.endPoint = CGPoint(x: 0.5, y: 1)
-    //        gradientView.layer.insertSublayer(gradientLayer, at: 0)
-    //        
-    //        gradientView.layer.cornerRadius = 16
-    //        gradientView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner] // Нижние углы
-    //        gradientView.layer.masksToBounds = true
-    //    }
+    func setIsLiked(_ isLiked: Bool) {
+        setLikeButtonImage(UIImage(resource: isLiked ? .likeButtonOn : .likeButtonOff))
+    }
 }

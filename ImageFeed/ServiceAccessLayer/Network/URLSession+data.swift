@@ -48,7 +48,7 @@ extension URLSession {
             switch result {
             case .success(let data):
                 if let jsonString = String(data: data, encoding: .utf8) {
-                    print("Get data: \(jsonString)")
+                    print("👀 [objectTask] \(jsonString)")
                 }
                 do {
                     let body = try decoder.decode(T.self, from: data)
