@@ -19,12 +19,12 @@ final class WebViewTests: XCTestCase {
         
         //when
         _ = viewController.view
-
+        
         //then
         XCTAssertTrue(presenter.viewDidLoadCalled) //behaviour verification
-
+        
     }
-
+    
     func testPresenterCallsLoadRequest() {
         //given
         let viewController = WebViewViewControllerSpy()
@@ -93,7 +93,7 @@ final class WebViewTests: XCTestCase {
         let authHelper = AuthHelper()
         
         // when
-        let code = authHelper.code(from: url!)
+        let code = authHelper.getCode(from: url!)
         // then
         XCTAssertEqual(code, "test code")
     }

@@ -13,7 +13,7 @@ protocol ImagesListViewProtocol: AnyObject {
 }
 
 final class ImagesListPresenter {
-    weak var view: ImagesListViewProtocol?
+    private weak var view: ImagesListViewProtocol?
     private let imagesListService = ImagesListService.shared
     private(set) var photos: [Photo] = []
     private let dateFormatter: DateFormatter = {
@@ -54,8 +54,8 @@ final class ImagesListPresenter {
         let photo = photos[indexPath.row]
         UIBlockingProgressHUD.show()
         imagesListService.changeLike(photoId: photo.id, isLike: photo.isLiked) { [weak self] result in
-            guard let self = self else { return }
             UIBlockingProgressHUD.dismiss()
+            guard let self = self else { return }
             switch result {
             case .success:
                 self.photos = self.imagesListService.photos

@@ -38,6 +38,22 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		8CB536342EB258C000CC5AB6 /* Exceptions for "ImageFeed" folder in "ImageFeedTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				ViewControllers/Auth/WebViewPresenter.swift,
+				ViewControllers/Auth/WebViewViewController.swift,
+			);
+			target = 8C0D9BC12EAE5487003BF083 /* ImageFeedTests */;
+		};
+		8CB536352EB258C000CC5AB6 /* Exceptions for "ImageFeed" folder in "ImageFeedUITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				ViewControllers/Auth/WebViewPresenter.swift,
+				ViewControllers/Auth/WebViewViewController.swift,
+			);
+			target = 8C1634F22EB00C2900DAEBF5 /* ImageFeedUITests */;
+		};
 		8CC306552E4CBECD00482012 /* Exceptions for "ImageFeed" folder in "ImageFeed" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -62,6 +78,8 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				8CC306552E4CBECD00482012 /* Exceptions for "ImageFeed" folder in "ImageFeed" target */,
+				8CB536342EB258C000CC5AB6 /* Exceptions for "ImageFeed" folder in "ImageFeedTests" target */,
+				8CB536352EB258C000CC5AB6 /* Exceptions for "ImageFeed" folder in "ImageFeedUITests" target */,
 			);
 			path = ImageFeed;
 			sourceTree = "<group>";

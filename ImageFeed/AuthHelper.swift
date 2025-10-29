@@ -8,22 +8,19 @@
 import Foundation
 
 protocol AuthHelperProtocol {
-    func authRequest() -> URLRequest?
-    func code(from url: URL) -> String?
+    func getCode(from url: URL) -> String?
+    var authURLRequest: URLRequest? { get }
 }
 
 final class AuthHelper: AuthHelperProtocol {
-    let configuration: AuthConfiguration
+    private let configuration: AuthConfiguration
     
     init(configuration: AuthConfiguration = .standard) {
         self.configuration = configuration
     }
-    
-    func authRequest() -> URLRequest? {
-        print("🌐 Loading Unsplash auth page…")
-        guard let url = authURL() else { return nil }
-        print("🔗 Final Auth URL:", url.absoluteString)
-        return URLRequest(url: url)
+    var authURLRequest: URLRequest? {
+       guard let url = authURL() else { return nil }
+       return URLRequest(url: url)
     }
     
     func authURL() -> URL? {
@@ -43,7 +40,7 @@ final class AuthHelper: AuthHelperProtocol {
         return urlComponents.url
     }
     
-    func code(from url: URL) -> String? {
+    func getCode(from url: URL) -> String? {
         if let urlComponents = URLComponents(string: url.absoluteString),
            urlComponents.path == "/oauth/authorize/native",
            let items = urlComponents.queryItems,
