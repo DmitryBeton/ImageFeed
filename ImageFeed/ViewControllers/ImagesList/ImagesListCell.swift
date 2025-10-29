@@ -38,6 +38,7 @@ final class ImagesListCell: UITableViewCell {
         button.addTarget(self,
                          action: #selector(likeButtonClicked),
                          for: .touchUpInside)
+        button.accessibilityIdentifier = "like button on"
         return button
     }()
     
