@@ -19,13 +19,13 @@ final class ImagesListViewController: UIViewController {
         return tableView
     }()
     
-    private var presenter: ImagesListPresenter!
+    private var presenter: ImagesListPresenter?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         presenter = ImagesListPresenter(view: self)
-        presenter.fetchNextPage()
+        presenter?.fetchNextPage()
     }
     
     private func setupUI() {
@@ -65,12 +65,14 @@ extension ImagesListViewController: ImagesListViewProtocol {
 // MARK: - UITableViewDataSource
 extension ImagesListViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        presenter.numberOfPhotos()
+        guard let presenter = presenter else { return 0 }
+        return presenter.numberOfPhotos()
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard
-            let cell = tableView.dequeueReusableCell(withIdentifier: ImagesListCell.reuseIdentifier, for: indexPath) as? ImagesListCell
+            let cell = tableView.dequeueReusableCell(withIdentifier: ImagesListCell.reuseIdentifier, for: indexPath) as? ImagesListCell,
+            let presenter = presenter
         else { return UITableViewCell() }
         
         let photo = presenter.photo(at: indexPath)
@@ -91,6 +93,7 @@ extension ImagesListViewController: UITableViewDataSource {
 // MARK: - UITableViewDelegate
 extension ImagesListViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        guard let presenter = presenter else { return 0 }
         let photo = presenter.photo(at: indexPath)
         let insets = UIEdgeInsets(top: 4, left: 16, bottom: 4, right: 16)
         let width = tableView.bounds.width - insets.left - insets.right
@@ -99,12 +102,19 @@ extension ImagesListViewController: UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        guard let presenter = presenter else {
+            return
+        }
         if indexPath.row + 1 == presenter.numberOfPhotos() {
             presenter.fetchNextPage()
         }
+
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        guard let presenter = presenter else {
+            return
+        }
         let photo = presenter.photo(at: indexPath)
         let singleVC = SingleImageViewController()
         if let url = URL(string: photo.largeImageURL) {
@@ -119,7 +129,10 @@ extension ImagesListViewController: UITableViewDelegate {
 // MARK: - ImagesListCellDelegate
 extension ImagesListViewController: ImagesListCellDelegate {
     func imageListCellDidTapLike(_ cell: ImagesListCell) {
-        guard let indexPath = tableView.indexPath(for: cell) else { return }
+        guard
+            let indexPath = tableView.indexPath(for: cell),
+            let presenter = presenter
+        else { return }
         presenter.likePhoto(at: indexPath) { [weak self] isLiked in
             cell.setIsLiked(isLiked)
             self?.reloadRow(at: indexPath)
